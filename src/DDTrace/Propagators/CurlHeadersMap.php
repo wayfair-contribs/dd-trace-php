@@ -15,6 +15,11 @@ use DDTrace\Tracer;
 final class CurlHeadersMap implements Propagator
 {
     /**
+     * @var Configuration
+     */
+    private $globalConfig;
+
+    /**
      * @var Tracer
      */
     private $tracer;
@@ -24,6 +29,7 @@ final class CurlHeadersMap implements Propagator
      */
     public function __construct(Tracer $tracer)
     {
+        $this->globalConfig = Configuration::get();
         $this->tracer = $tracer;
     }
 
@@ -52,16 +58,20 @@ final class CurlHeadersMap implements Propagator
             }
         }
 
-        $carrier[] = Propagator::DEFAULT_TRACE_ID_HEADER . ': ' . $spanContext->getTraceId();
-        $carrier[] = Propagator::DEFAULT_PARENT_ID_HEADER . ': ' . $spanContext->getSpanId();
+        if ($this->globalConfig->isDistributedTracingEnabled()) {
+            $carrier[] = Propagator::DEFAULT_TRACE_ID_HEADER . ': ' . $spanContext->getTraceId();
+            $carrier[] = Propagator::DEFAULT_PARENT_ID_HEADER . ': ' . $spanContext->getSpanId();
 
-        foreach ($spanContext as $key => $value) {
-            $carrier[] = Propagator::DEFAULT_BAGGAGE_HEADER_PREFIX . $key . ': ' . $value;
+            foreach ($spanContext as $key => $value) {
+                $carrier[] = Propagator::DEFAULT_BAGGAGE_HEADER_PREFIX . $key . ': ' . $value;
+            }
         }
 
-        $prioritySampling = $this->tracer->getPrioritySampling();
-        if (PrioritySampling::UNKNOWN !== $prioritySampling) {
-            $carrier[] = Propagator::DEFAULT_SAMPLING_PRIORITY_HEADER . ': ' . $prioritySampling;
+        if ($this->globalConfig->isPrioritySamplingEnabled()) {
+            $prioritySampling = $this->tracer->getPrioritySampling();
+            if (PrioritySampling::UNKNOWN !== $prioritySampling) {
+                $carrier[] = Propagator::DEFAULT_SAMPLING_PRIORITY_HEADER . ': ' . $prioritySampling;
+            }
         }
     }
 

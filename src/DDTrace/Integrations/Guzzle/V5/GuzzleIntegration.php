@@ -45,10 +45,6 @@ class GuzzleIntegration extends Integration
      */
     public static function injectDistributedTracingHeaders($request, $span)
     {
-        if (!Configuration::get()->isDistributedTracingEnabled()) {
-            return;
-        }
-
         if (!is_subclass_of($request, '\GuzzleHttp\Message\MessageInterface')) {
             return;
         }

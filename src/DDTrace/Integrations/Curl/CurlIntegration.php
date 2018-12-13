@@ -91,10 +91,6 @@ class CurlIntegration
      */
     public static function injectDistributedTracingHeaders($ch)
     {
-        if (!Configuration::get()->isDistributedTracingEnabled()) {
-            return;
-        }
-
         $httpHeaders = ArrayKVStore::getForResource($ch, Formats\CURL_HTTP_HEADERS, []);
         if (is_array($httpHeaders)) {
             $tracer = GlobalTracer::get();

@@ -34,16 +34,20 @@ final class TextMap implements Propagator
      */
     public function inject(SpanContext $spanContext, &$carrier)
     {
-        $carrier[Propagator::DEFAULT_TRACE_ID_HEADER] = $spanContext->getTraceId();
-        $carrier[Propagator::DEFAULT_PARENT_ID_HEADER] = $spanContext->getSpanId();
+        if ($this->globalConfig->isDistributedTracingEnabled()) {
+            $carrier[Propagator::DEFAULT_TRACE_ID_HEADER] = $spanContext->getTraceId();
+            $carrier[Propagator::DEFAULT_PARENT_ID_HEADER] = $spanContext->getSpanId();
 
-        foreach ($spanContext as $key => $value) {
-            $carrier[Propagator::DEFAULT_BAGGAGE_HEADER_PREFIX . $key] = $value;
+            foreach ($spanContext as $key => $value) {
+                $carrier[Propagator::DEFAULT_BAGGAGE_HEADER_PREFIX . $key] = $value;
+            }
         }
 
-        $prioritySampling = $this->tracer->getPrioritySampling();
-        if (PrioritySampling::UNKNOWN !== $prioritySampling) {
-            $carrier[Propagator::DEFAULT_SAMPLING_PRIORITY_HEADER] = $prioritySampling;
+        if ($this->globalConfig->isPrioritySamplingEnabled()) {
+            $prioritySampling = $this->tracer->getPrioritySampling();
+            if (PrioritySampling::UNKNOWN !== $prioritySampling) {
+                $carrier[Propagator::DEFAULT_SAMPLING_PRIORITY_HEADER] = $prioritySampling;
+            }
         }
     }
 
