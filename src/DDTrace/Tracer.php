@@ -129,12 +129,15 @@ final class Tracer implements OpenTracingTracer
             /** @var SpanContext $parentContext */
             $parentContext = $reference->getContext();
 
-            if ($parentContext->getTraceId() === null || $parentContext->getParentId() === null) {
+            // In some case, e.g. when priority sampling is enabled but distributed sampling is not, we could still
+            // have a propagated context which does not hold any span information, but holds the propagated priority
+            // sampling value.
+            if ($parentContext->getSpanId() === null) {
                 $context = SpanContext::createAsRoot();
+                $context->setPropagatedPrioritySampling($parentContext->getPropagatedPrioritySampling());
             } else {
-                $context = SpanContext::createAsChild($reference->getContext());
+                $context = SpanContext::createAsChild($parentContext);
             }
-            $context->setPropagatedPrioritySampling($parentContext->getPropagatedPrioritySampling());
         }
 
         $span = new Span(

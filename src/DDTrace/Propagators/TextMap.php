@@ -52,23 +52,36 @@ final class TextMap implements Propagator
      */
     public function extract($carrier)
     {
-        $traceId = null;
-        $spanId = null;
-        $prioritySampling = null;
-        $baggageItems = [];
+        $propagatedTraceId = null;
+        $propagatedSpanId = null;
+        $propagatedPrioritySampling = PrioritySampling::UNKNOWN;
+        $propagatedBaggageItems = [];
 
         foreach ($carrier as $key => $value) {
             if ($key === Propagator::DEFAULT_TRACE_ID_HEADER) {
-                $traceId = $this->extractStringOrFirstArrayElement($value);
+                $propagatedTraceId = $this->extractStringOrFirstArrayElement($value);
             } elseif ($key === Propagator::DEFAULT_PARENT_ID_HEADER) {
-                $spanId = $this->extractStringOrFirstArrayElement($value);
+                $propagatedSpanId = $this->extractStringOrFirstArrayElement($value);
             } elseif (strpos($key, Propagator::DEFAULT_BAGGAGE_HEADER_PREFIX) === 0) {
-                $baggageItems[substr($key, strlen(Propagator::DEFAULT_BAGGAGE_HEADER_PREFIX))] = $value;
+                $propagatedBaggageItems[substr($key, strlen(Propagator::DEFAULT_BAGGAGE_HEADER_PREFIX))] = $value;
+            } elseif ($key === Propagator::DEFAULT_SAMPLING_PRIORITY_HEADER) {
+                $rawValue = $this->extractStringOrFirstArrayElement($carrier[Propagator::DEFAULT_SAMPLING_PRIORITY_HEADER]);
+                $propagatedPrioritySampling = PrioritySampling::parse($rawValue);
             }
         }
 
-        $spanContext = new SpanContext($traceId, $spanId, null, $baggageItems, true);
-        $this->extractPrioritySampling($spanContext, $carrier);
+        // We only accepted propagated traces for distributed tracing if both trace and parent ids are provided.
+        // Note, though, that even a propagated context has not distributed tracing enabled, it may still have
+        // priority sampling enabled, so we still have to create with the priority sampling in it.
+        $traceId = null;
+        $spanId = null;
+        if ($propagatedTraceId !== null && $propagatedSpanId !== null) {
+            $traceId = $propagatedTraceId;
+            $spanId = $propagatedSpanId;
+        }
+
+        $spanContext = new SpanContext($traceId, $spanId, null, $propagatedBaggageItems, true);
+        $spanContext->setPropagatedPrioritySampling($propagatedPrioritySampling);
         return $spanContext;
     }
 

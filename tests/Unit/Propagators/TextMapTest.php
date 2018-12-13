@@ -50,7 +50,9 @@ final class TextMapTest extends Framework\TestCase
         ];
         $textMapPropagator = new TextMap($this->tracer);
         $context = $textMapPropagator->extract($carrier);
-        $this->assertNull($context);
+        $this->assertNull($context->getTraceId());
+        $this->assertNull($context->getSpanId());
+        $this->assertNull($context->getParentId());
     }
 
     public function testExtractSpanContextFromCarrierFailsDueToLackOfParentId()
@@ -61,7 +63,9 @@ final class TextMapTest extends Framework\TestCase
         ];
         $textMapPropagator = new TextMap($this->tracer);
         $context = $textMapPropagator->extract($carrier);
-        $this->assertNull($context);
+        $this->assertNull($context->getTraceId());
+        $this->assertNull($context->getSpanId());
+        $this->assertNull($context->getParentId());
     }
 
     public function testExtractSpanContextFromCarrierSuccess()
