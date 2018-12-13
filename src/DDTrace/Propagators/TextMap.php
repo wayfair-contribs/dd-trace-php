@@ -67,10 +67,6 @@ final class TextMap implements Propagator
             }
         }
 
-        if ($traceId === null || $spanId === null) {
-            return null;
-        }
-
         $spanContext = new SpanContext($traceId, $spanId, null, $baggageItems, true);
         $this->extractPrioritySampling($spanContext, $carrier);
         return $spanContext;

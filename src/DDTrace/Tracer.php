@@ -126,7 +126,15 @@ final class Tracer implements OpenTracingTracer
         if ($reference === null) {
             $context = SpanContext::createAsRoot();
         } else {
-            $context = SpanContext::createAsChild($reference->getContext());
+            /** @var SpanContext $parentContext */
+            $parentContext = $reference->getContext();
+
+            if ($parentContext->getTraceId() === null || $parentContext->getParentId() === null) {
+                $context = SpanContext::createAsRoot();
+            } else {
+                $context = SpanContext::createAsChild($reference->getContext());
+            }
+            $context->setPropagatedPrioritySampling($parentContext->getPropagatedPrioritySampling());
         }
 
         $span = new Span(

@@ -36,8 +36,7 @@ class Configuration extends AbstractConfiguration
      */
     public function isPrioritySamplingEnabled()
     {
-        return $this->isDistributedTracingEnabled()
-            && $this->boolValue('priority.sampling', true);
+        return $this->boolValue('priority.sampling', true);
     }
 
     /**
