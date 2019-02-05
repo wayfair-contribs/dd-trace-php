@@ -1,6 +1,10 @@
 version: '3.2'
 
 services:
+  toolkit:
+    image: datadog/docker-library:ddtrace_php_toolkit
+    build:
+      context: ./toolkit
   '5.4-centos6': &base_image
     ulimits: { core: 99999999999 }
     stdin_open: true
@@ -28,4 +32,13 @@ services:
   '7.1-zts-alpine':  { <<: *base_image, image: 'php:7.1-zts-alpine' }
   '7.2-zts-alpine':  { <<: *base_image, image: 'php:7.2-zts-alpine' }
   '7.3-zts-alpine':  { <<: *base_image, image: 'php:7.3-zts-alpine' }
+  '5.6-ubuntu-16.10-nginx-fpm':
+    image: datadog/docker-library:ddtrace_php_verify_packages_5.6-ubuntu-16.10-nginx-fpm
+    build:
+      context: ./5.6-ubuntu-16.10-nginx-fpm
+    volumes:
+      - ../../build/packages:/datadog
+      - ./php_nginx_default.conf:/etc/nginx/sites-available/default
+      - ./index.php:/var/www/html/index.php
+      - ./supervisord-nginx-fpm.conf:/etc/supervisord.conf
 

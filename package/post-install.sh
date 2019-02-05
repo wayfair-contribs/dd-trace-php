@@ -39,7 +39,7 @@ function generate_configuration_files() {
     INI_FILE_PATH="${EXTENSION_CFG_DIR}/$INI_FILE_NAME"
     CUSTOM_INI_FILE_PATH="${EXTENSION_CFG_DIR}/$CUSTOM_INI_FILE_NAME"
 
-    println "Creating ${INI_FILE_NAME}"
+    println "Creating configuration file ${INI_FILE_PATH}"
     println "\n"
 
     create_configuration_file "${INI_FILE_PATH}"
@@ -122,8 +122,63 @@ function verify_installation() {
     fi
 }
 
+function install_for_php_runtime() {
+    PHP_EXECUTABLE=$1
+    PHP_CFG_DIR_COMMAND="${PHP_EXECUTABLE} -i | grep 'Scan for additional .ini files in:' | sed -e 's/Scan for additional .ini files in://g' | head -n 1 | awk '{print $1}'"
+    PHP_CFG_DIR=$(eval ${PHP_CFG_DIR_COMMAND})
+
+    if [[ ! -e ${PHP_CFG_DIR} ]]; then
+        println
+        println 'conf.d folder not found falling back to appending extension config to main "php.ini"'
+        PHP_CFG_FILE_PATH_COMMAND="${PHP_EXECUTABLE} --ini | grep 'Loaded Configuration File:' | sed -e 's/Loaded Configuration File://g' | head -n 1 | awk '{print $1}'"
+        PHP_CFG_FILE_PATH=$(eval ${PHP_CFG_FILE_PATH_COMMAND})
+        PHP_CFG_FILE="${PHP_CFG_FILE_PATH}/php.ini"
+        if [[ ! -e $PHP_CFG_FILE_PATH ]]; then
+            fail_print_and_exit
+        fi
+
+        if grep -q "${EXTENSION_FILE_PATH}" "${PHP_CFG_FILE}"; then
+            println
+            println '    extension configuration already exists skipping'
+        else
+            append_configuration_to_file "${PHP_CFG_FILE}"
+        fi
+    else
+        install_conf_d_files
+    fi
+}
+
+function install_for_php_fpm_runtime() {
+    PHP_EXECUTABLE=$1
+    PHP_CFG_DIR_COMMAND="${PHP_EXECUTABLE} --ini | grep 'Scan for additional .ini files in:' | sed -e 's/Scan for additional .ini files in://g' | head -n 1 | awk '{print $1}'"
+    PHP_CFG_DIR=$(eval ${PHP_CFG_DIR_COMMAND})
+
+    if [[ ! -e ${PHP_CFG_DIR} ]]; then
+        println
+        println 'conf.d folder not found falling back to appending extension config to main "php.ini"'
+        PHP_CFG_FILE_PATH_COMMAND="${PHP_EXECUTABLE} --ini | grep 'Loaded Configuration File:' | sed -e 's/Loaded Configuration File://g' | head -n 1 | awk '{print $1}'"
+        PHP_CFG_FILE_PATH=$(eval ${PHP_CFG_FILE_PATH_COMMAND})
+        PHP_CFG_FILE="${PHP_CFG_FILE_PATH}/php.ini"
+        if [[ ! -e $PHP_CFG_FILE_PATH ]]; then
+            fail_print_and_exit
+        fi
+
+        if grep -q "${EXTENSION_FILE_PATH}" "${PHP_CFG_FILE}"; then
+            println
+            println '    extension configuration already exists skipping'
+        else
+            append_configuration_to_file "${PHP_CFG_FILE}"
+        fi
+    else
+        install_conf_d_files
+    fi
+}
+
+println "Creating extension dir: ${EXTENSION_DIR}"
 mkdir -p $EXTENSION_DIR
+println "Creating extension configuration dir: ${EXTENSION_CFG_DIR}"
 mkdir -p $EXTENSION_CFG_DIR
+println "Creating extension logs dir: ${EXTENSION_LOGS_DIR}"
 mkdir -p $EXTENSION_LOGS_DIR
 
 println 'Installing Datadog PHP tracing extension (ddtrace)'
@@ -134,7 +189,9 @@ println
 php -i > "$EXTENSION_LOGS_DIR/php-info.log"
 
 PHP_VERSION=$(php -i | grep 'PHP API' | awk '{print $NF}')
+println "Detected php version: ${PHP_VERSION}"
 PHP_CFG_DIR=$(php --ini | grep 'Scan for additional .ini files in:' | sed -e 's/Scan for additional .ini files in://g' | head -n 1 | awk '{print $1}')
+println "Detected php configuration directory: ${PHP_CFG_DIR}"
 
 PHP_THREAD_SAFETY=$(php -i | grep 'Thread Safety' | awk '{print $NF}' | grep -i enabled)
 
@@ -145,6 +202,8 @@ fi
 
 EXTENSION_NAME="ddtrace-${PHP_VERSION}${VERSION_SUFFIX}.so"
 EXTENSION_FILE_PATH="${EXTENSION_DIR}/${EXTENSION_NAME}"
+println "Extension absolute path: ${EXTENSION_FILE_PATH}"
+
 INI_FILE_CONTENTS=$(cat <<EOF
 [datadog]
 extension=${EXTENSION_FILE_PATH}
