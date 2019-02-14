@@ -1,0 +1,14 @@
+version: "3.4"
+
+services:
+
+  debug_agent:
+    image: php:7.2
+    ports:
+      - 9000:80
+    environment:
+      DD_REQUEST_DUMPER_FILE: dump.json
+    volumes:
+      - ../request_replayer:/var/www
+    working_dir: /var/www
+    command: php -S 0.0.0.0:80 index.php
