@@ -1,0 +1,31 @@
+FROM ubuntu:18.04
+
+ARG PHP_VERSION=7.2
+ARG SCRIPTS_DIR=scripts
+ARG CONFIG_DIR=config
+
+COPY ${SCRIPTS_DIR}/install-${PHP_VERSION}.sh install-php-exts.sh
+COPY ${SCRIPTS_DIR}/install-common.sh install-common.sh
+
+RUN apt-get update \
+    && apt-get install -y software-properties-common
+    && add-apt-repository ppa:ondrej/php
+    && apt-get -y install \
+        php${PHP_VERSION} \
+        php${PHP_VERSION}-fpm \
+        nginx \
+    && sh install-php-exts.sh
+    && sh install-common.sh
+    && rm -rf /var/lib/apt/lists/*
+
+COPY ${CONFIG_DIR}/php_nginx_default.conf /etc/nginx/sites-available/default
+COPY ${CONFIG_DIR}/supervisord-nginx-fpm.conf /etc/supervisord.conf
+
+# This volume will contain the packages to install
+VOLUME /packages
+
+COPY ${SCRIPTS_DIR}/app_start.sh app_start.sh
+
+ENTRYPOINT app_start.sh
+
+CMD [ "supervisord", "-n" ]

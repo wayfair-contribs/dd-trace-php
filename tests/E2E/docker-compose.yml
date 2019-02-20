@@ -12,3 +12,14 @@ services:
       - ../request_replayer:/var/www
     working_dir: /var/www
     command: php -S 0.0.0.0:80 index.php
+
+  ubuntu1804_php72ondrej_nginx_fpm:
+    image: datadog/docker-library:php_e3e_ubuntu1804_php72ondrej_nginx_fpm
+    build:
+      context: .
+      dockerfile: Dockerfiles/Dockerfile_ubuntu1804_php72ondrej_nginx_fpm
+    environment:
+      DD_REQUEST_DUMPER_FILE: dump.json
+    volumes:
+      - ./www:/var/www
+    working_dir: /var/www

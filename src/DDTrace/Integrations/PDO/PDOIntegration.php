@@ -2,6 +2,7 @@
 
 namespace DDTrace\Integrations\PDO;
 
+use DDTrace\Contracts\Span;
 use DDTrace\Integrations\Integration;
 use DDTrace\Tag;
 use DDTrace\Type;
@@ -228,7 +229,7 @@ class PDOIntegration
     }
 
     /**
-     * @param \DDTrace\Span $span
+     * @param Span $span
      * @param \PDO|\PDOStatement $pdo_or_statement
      */
     public static function detectError($span, $pdo_or_statement)

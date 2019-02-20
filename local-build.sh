@@ -50,6 +50,15 @@ function prepare_package() {
     echo "Generated file $(pwd)/packages.tar.gz"
 }
 
+if [ $# -eq 0 ]
+  then
+    build_version_54
+    build_version_56
+    build_version_70
+    build_version_71
+    build_version_72
+fi
+
 while (( "$#" )); do
     case "$1" in
         -h)
@@ -79,11 +88,8 @@ while (( "$#" )); do
           break
           ;;
         *)
-          build_version_54
-          build_version_56
-          build_version_70
-          build_version_71
-          build_version_72
+          echo "Unknown version to build"
+          exho 1
           ;;
     esac
 done
