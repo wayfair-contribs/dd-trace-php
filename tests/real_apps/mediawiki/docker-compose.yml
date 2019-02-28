@@ -1,0 +1,43 @@
+version: '3.4'
+
+services:
+  agent:
+    image: datadog/agent:latest
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock:ro
+    - /proc/:/host/proc/:ro
+    - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+    environment:
+    - DD_API_KEY=${DATADOG_API_KEY}
+    - DD_APM_ENABLED=true
+  mediawiki:
+    image: datadog/docker-library:php-mediawiki
+    build:
+      context: .
+    ports:
+      - 8081:80
+    links:
+      - agent
+      - database
+    volumes:
+      - "./LocalSettings.php:/var/www/html/LocalSettings.php"
+    environment:
+      DD_AGENT_HOST: agent
+      DD_TRACE_APP_NAME: php_tracer_mediawiki
+  database:
+    image: mariadb
+    volumes:
+      - ./000_mediawiki.sql:/docker-entrypoint-initdb.d/000_mediawiki.sql
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_DATABASE: my_wiki
+      MYSQL_USER: wikiuser
+      MYSQL_PASSWORD: example
+      MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
+
+volumes:
+  mariadb_data:
+    driver: local
+  phabricator_data:
+    driver: local
