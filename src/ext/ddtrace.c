@@ -26,6 +26,7 @@
 #include "debug.h"
 #include "dispatch.h"
 #include "dispatch_compat.h"
+#include "execute_hooks.h"
 #include "memory_limit.h"
 #include "random.h"
 #include "request_hooks.h"
@@ -119,6 +120,8 @@ static PHP_MINIT_FUNCTION(ddtrace) {
         return SUCCESS;
     }
 
+    ddtrace_execute_hooks_init();
+
     register_span_data_ce(TSRMLS_C);
     // config initialization needs to be at the top
     ddtrace_initialize_config(TSRMLS_C);
@@ -141,6 +144,8 @@ static PHP_MSHUTDOWN_FUNCTION(ddtrace) {
     if (DDTRACE_G(disable)) {
         return SUCCESS;
     }
+
+    ddtrace_execute_hooks_shutdown();
 
     // when extension is properly unloaded disable the at_exit hook
     ddtrace_coms_disable_atexit_hook();
