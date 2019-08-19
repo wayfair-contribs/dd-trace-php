@@ -257,6 +257,7 @@ BOOL_T ddtrace_should_trace_call(zend_execute_data *execute_data, zend_function 
         return FALSE;
     }
     *fbc = _get_current_fbc(execute_data TSRMLS_CC);
+
     if (!*fbc) {
         return FALSE;
     }
@@ -278,9 +279,16 @@ BOOL_T ddtrace_should_trace_call(zend_execute_data *execute_data, zend_function 
 
     zval *this = ddtrace_this(execute_data);
     *dispatch = ddtrace_find_dispatch(this, *fbc, fname TSRMLS_CC);
+
     if (!*dispatch || (*dispatch)->busy) {
         return FALSE;
     }
+
+#if PHP_VERSION_ID < 50500
+    if ((*dispatch)->run_as_postprocess) {
+        return FALSE;
+    }
+#endif
 
     return TRUE;
 }

@@ -61,7 +61,16 @@ void ddtrace_trace_dispatch(ddtrace_dispatch_t *dispatch, zend_function *fbc,
     ddtrace_close_span(TSRMLS_C);
 
 #if PHP_VERSION_ID < 50500
-    (void)opline;  // TODO Make work on PHP 5.4
+    if (user_retval != NULL) {
+        if (RETURN_VALUE_USED(opline)) {
+            zval **return_value_ptr =
+                &(*(temp_variable *)((char *)execute_data->Ts + execute_data->opline->result.var)).var.ptr;
+            *return_value_ptr = user_retval;
+        } else {
+            zval_dtor(user_retval);
+            efree(user_retval);
+        }
+    }
 #elif PHP_VERSION_ID < 70000
     // Put the original return value on the opline
     if (user_retval != NULL) {
