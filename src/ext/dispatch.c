@@ -33,7 +33,7 @@ ZEND_EXTERN_MODULE_GLOBALS(ddtrace);
 #define EX(x) ((execute_data)->x)
 #endif
 
-static ddtrace_dispatch_t *find_function_dispatch(const HashTable *lookup, zval *fname) {
+ddtrace_dispatch_t *find_function_dispatch(const HashTable *lookup, zval *fname) {
     char *key = zend_str_tolower_dup(Z_STRVAL_P(fname), Z_STRLEN_P(fname));
     ddtrace_dispatch_t *dispatch = NULL;
     dispatch = zend_hash_str_find_ptr(lookup, key, Z_STRLEN_P(fname));
@@ -42,7 +42,7 @@ static ddtrace_dispatch_t *find_function_dispatch(const HashTable *lookup, zval 
     return dispatch;
 }
 
-static ddtrace_dispatch_t *find_method_dispatch(const zend_class_entry *class, zval *fname TSRMLS_DC) {
+ddtrace_dispatch_t *find_method_dispatch(const zend_class_entry *class, zval *fname TSRMLS_DC) {
     if (!fname || !Z_STRVAL_P(fname)) {
         return NULL;
     }

@@ -27,4 +27,8 @@ void ddtrace_dispatch_inject(TSRMLS_D);
 void ddtrace_dispatch_destroy(TSRMLS_D);
 void ddtrace_dispatch_reset(TSRMLS_D);
 
+/* todo: add ddtrace_ prefix */
+ddtrace_dispatch_t *find_function_dispatch(const HashTable *lookup, zval *fname);
+ddtrace_dispatch_t *find_method_dispatch(const zend_class_entry *class, zval *fname TSRMLS_DC);
+
 #endif  // DISPATCH_H

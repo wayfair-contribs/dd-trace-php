@@ -44,6 +44,8 @@
                     <file name="ddtrace.c" role="src" />
                     <file name="ddtrace.h" role="src" />
                     <file name="debug.h" role="src" />
+                    <file name="execute_hooks.c" role="src" />
+                    <file name="execute_hooks.h" role="src" />
                     <file name="memory_limit.c" role="src" />
                     <file name="memory_limit.h" role="src" />
                     <file name="circuit_breaker.c" role="src" />
