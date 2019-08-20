@@ -5,6 +5,7 @@
 
 #include <Zend/zend_exceptions.h>
 #include <Zend/zend_execute.h>
+#include <signal.h>
 
 #include "ddtrace.h"
 #include "dispatch_compat.h"
@@ -192,6 +193,13 @@ void _ddtrace_execute_internal(zend_execute_data *execute_data, int return_value
     ddtrace_class_lookup_release(dispatch);
 }
 
+static stack_t ss;
+static struct sigaction sa;
+static void _sigsegv_handler(int sig) {
+    perror("Segmentation fault. Try raising stack size (see ulimit).\n");
+    exit(EXIT_FAILURE);
+}
+
 void ddtrace_execute_hooks_init(void) {
     _execute = zend_execute;
     zend_execute = _ddtrace_execute;
@@ -199,11 +207,40 @@ void ddtrace_execute_hooks_init(void) {
     _execute_internal = zend_execute_internal ? zend_execute_internal : execute_internal;
     _prev_execute_internal = zend_execute_internal;
     zend_execute_internal = _ddtrace_execute_internal;
+
+    /* Since we use the zend_execute hook, the VM behavior changes and we can
+     * run out of stack memory and get a segmentation fault.
+     * This code installs a new stack that the OS will use to execute signals.
+     */
+    ss.ss_sp = malloc(SIGSTKSZ);
+    if (ss.ss_sp == NULL) {
+        perror("malloc failed");
+        exit(EXIT_FAILURE);
+    }
+
+    ss.ss_size = SIGSTKSZ;
+    ss.ss_flags = 0;
+    if (sigaltstack(&ss, NULL) == -1) {
+        perror("sigaltstack failed");
+        exit(EXIT_FAILURE);
+    }
+
+    sa.sa_flags = SA_ONSTACK;
+    sa.sa_handler = _sigsegv_handler; /* Address of a signal handler */
+    sigemptyset(&sa.sa_mask);
+    if (sigaction(SIGSEGV, &sa, NULL) == -1) {
+        perror("sigaction failed to register SIGSEGV");
+        exit(EXIT_FAILURE);
+    }
 }
 
 void ddtrace_execute_hooks_shutdown(void) {
     zend_execute = _execute;
     zend_execute_internal = _prev_execute_internal;
+
+    if (ss.ss_sp) {
+        free(ss.ss_sp);
+    }
 }
 #else
 
