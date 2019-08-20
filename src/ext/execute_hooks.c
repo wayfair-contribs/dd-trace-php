@@ -137,6 +137,10 @@ BOOL_T _should_trace_user(zend_op_array *op_array, ddtrace_dispatch_t **dispatch
         return FALSE;
     }
 
+    if (!(*dispatch)->append) {
+        return FALSE;
+    }
+
     return TRUE;
 }
 

@@ -8,10 +8,12 @@
 #include "span.h"
 
 /* Move these to a header if dispatch.c still needs it */
-#if PHP_VERSION_ID >= 70100
-#define RETURN_VALUE_USED(opline) ((opline)->result_type != IS_UNUSED)
-#else
+#if PHP_VERSION_ID < 50400
+#define RETURN_VALUE_USED(opline) (!((opline)->result.u.EA.type & EXT_TYPE_UNUSED))
+#elif PHP_VERSION_ID < 70100
 #define RETURN_VALUE_USED(opline) (!((opline)->result_type & EXT_TYPE_UNUSED))
+#else
+#define RETURN_VALUE_USED(opline) ((opline)->result_type != IS_UNUSED)
 #endif
 
 /* Why did we redef this? */
@@ -61,7 +63,11 @@ void ddtrace_trace_dispatch(ddtrace_dispatch_t *dispatch, zend_function *fbc,
 #if PHP_VERSION_ID < 50500
     if (user_retval != NULL) {
         if (RETURN_VALUE_USED(opline)) {
+#if PHP_VERSION_ID < 50400
+            zval **return_value_ptr = &(*(temp_variable *)((char *) execute_data->Ts + execute_data->opline->result.u.var)).var.ptr;
+#else
             zval **return_value_ptr = &(*(temp_variable *)((char *) execute_data->Ts + execute_data->opline->result.var)).var.ptr;
+#endif
             *return_value_ptr = user_retval;
         } else {
             zval_dtor(user_retval);
