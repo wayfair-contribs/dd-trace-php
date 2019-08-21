@@ -22,14 +22,14 @@ class TestService
 
 class Foo
 {
-    public function bar($thoughts, array $bar = [])
+    public function bar($thoughts, array $bar = array())
     {
         echo "Foo::bar()\n";
-        return [
+        return array(
             'thoughts' => $thoughts,
             'first' => isset($bar[0]) ? $bar[0] : '(none)',
             'rand' => mt_rand(42, 999)
-        ];
+        );
     }
 }
 
@@ -44,24 +44,24 @@ var_dump(dd_trace_method(
         $span->resource = 'FooResource';
         $span->service = 'FooService';
         $span->type = 'FooType';
-        $span->meta = [
+        $span->meta = array(
             'args.0' => isset($args[0]) ? $args[0] : '',
             'retval.thoughts' => isset($retval['thoughts']) ? $retval['thoughts'] : '',
             'retval.first' => isset($retval['first']) ? $retval['first'] : '',
             'retval.rand' => isset($retval['rand']) ? $retval['rand'] : '',
-        ];
-        $span->metrics = [
+        );
+        $span->metrics = array(
             'foo' => isset($args[1][1]) ? $args[1][1] : '',
             'bar' => isset($args[1][2]) ? $args[1][2] : '',
-        ];
+        );
     }
 ));
 var_dump(dd_trace_function('mt_rand', function (SpanData $span, $args, $retval) {
     $span->name = 'MT';
-    $span->meta = [
+    $span->meta = array(
         'rand.range' => $args[0] . ' - ' . $args[1],
         'rand.value' => $retval,
-    ];
+    );
 }));
 
 $test = new Test();
@@ -71,7 +71,7 @@ $testService = new TestService();
 $testService->testServiceFoo();
 
 $foo = new Foo();
-$ret = $foo->bar('tracing is awesome', ['first', 'foo-red', 'bar-green']);
+$ret = $foo->bar('tracing is awesome', array('first', 'foo-red', 'bar-green'));
 var_dump($ret);
 
 echo "---\n";

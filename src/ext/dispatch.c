@@ -90,6 +90,7 @@ ddtrace_dispatch_t *ddtrace_find_dispatch(zval *this, zend_function *fbc, zval *
     return find_function_dispatch(DDTRACE_G(function_lookup), fname);
 }
 
+#if PHP_VERSION_ID >= 50400
 static void execute_fcall(ddtrace_dispatch_t *dispatch, zval *this, zend_execute_data *execute_data,
                           zval **return_value_ptr TSRMLS_DC) {
     zend_fcall_info fci = {0};
@@ -296,6 +297,7 @@ static zend_always_inline void wrap_and_run(zend_execute_data *execute_data, ddt
     }
 #endif
 }
+#endif
 
 #define CTOR_CALL_BIT 0x1
 #define CTOR_USED_BIT 0x2
@@ -355,6 +357,7 @@ int ddtrace_wrap_fcall(zend_execute_data *execute_data TSRMLS_DC) {
     if (dispatch->run_as_postprocess) {
         ddtrace_trace_dispatch(dispatch, current_fbc, execute_data TSRMLS_CC);
     } else {
+#if PHP_VERSION_ID >= 50400
         // Store original context for forwarding the call from userland
         zend_function *previous_fbc = DDTRACE_G(original_context).fbc;
         DDTRACE_G(original_context).fbc = current_fbc;
@@ -399,6 +402,7 @@ int ddtrace_wrap_fcall(zend_execute_data *execute_data TSRMLS_DC) {
         DDTRACE_G(original_context).fbc = previous_fbc;
 
         update_opcode_leave(execute_data TSRMLS_CC);
+#endif
     }
 
     dispatch->busy = 0;

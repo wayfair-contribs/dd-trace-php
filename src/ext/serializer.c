@@ -9,6 +9,14 @@
 
 ZEND_EXTERN_MODULE_GLOBALS(ddtrace);
 
+#if PHP_VERSION_ID < 50400 && !defined(INIT_PZVAL_COPY)
+#define INIT_PZVAL_COPY(z, v)  \
+    (z)->value = (v)->value;   \
+    Z_TYPE_P(z) = Z_TYPE_P(v); \
+    Z_SET_REFCOUNT_P(z, 1);    \
+    Z_UNSET_ISREF_P(z);
+#endif
+
 static int msgpack_write_zval(mpack_writer_t *writer, zval *trace TSRMLS_DC);
 
 #if PHP_VERSION_ID < 70000

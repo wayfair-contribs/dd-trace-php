@@ -15,17 +15,17 @@ function addOne($num)
     return $num + 1;
 }
 
-function bar($thoughts, array $bar = [])
+function bar($thoughts, array $bar = array())
 {
     echo "bar()\n";
-    return [
+    return array(
         'thoughts' => $thoughts,
         'first' => isset($bar[0]) ? $bar[0] : '(none)',
-        'rand' => array_sum([
+        'rand' => array_sum(array(
             mt_rand(0, 100),
             addOne(mt_rand(0, 100)),
-        ])
-    ];
+        ))
+    );
 }
 
 var_dump(dd_trace_function('array_sum', function (SpanData $span) {
@@ -45,22 +45,22 @@ var_dump(dd_trace_function(
         $span->resource = 'BarResource';
         $span->service = 'BarService';
         $span->type = 'BarType';
-        $span->meta = [
+        $span->meta = array(
             'args.0' => isset($args[0]) ? $args[0] : '',
             'retval.thoughts' => isset($retval['thoughts']) ? $retval['thoughts'] : '',
             'retval.first' => isset($retval['first']) ? $retval['first'] : '',
             'retval.rand' => isset($retval['rand']) ? $retval['rand'] : '',
-        ];
-        $span->metrics = [
+        );
+        $span->metrics = array(
             'foo' => isset($args[1][1]) ? $args[1][1] : '',
             'bar' => isset($args[1][2]) ? $args[1][2] : '',
-        ];
+        );
     }
 ));
 
 testFoo();
 var_dump(addOne(0));
-$ret = bar('tracing is awesome', ['first', 'foo-red', 'bar-green']);
+$ret = bar('tracing is awesome', array('first', 'foo-red', 'bar-green'));
 var_dump($ret);
 
 echo "---\n";
