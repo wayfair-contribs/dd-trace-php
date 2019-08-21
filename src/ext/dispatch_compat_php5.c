@@ -149,6 +149,7 @@ zend_bool ddtrace_dispatch_store(HashTable *lookup, ddtrace_dispatch_t *dispatch
                             sizeof(ddtrace_dispatch_t *), NULL) == SUCCESS;
 }
 
+#if PHP_VERSION_ID >= 50400
 // A modified version of func_get_args()
 // https://github.com/php/php-src/blob/PHP-5.6/Zend/zend_builtin_functions.c#L445
 static int get_args(zval *args, zend_execute_data *ex) {
@@ -249,6 +250,7 @@ static zend_function *_get_current_fbc(zend_execute_data *execute_data TSRMLS_DC
         return NULL;
     }
 }
+#endif
 
 BOOL_T ddtrace_should_trace_call(zend_execute_data *execute_data, zend_function **fbc,
                                  ddtrace_dispatch_t **dispatch TSRMLS_DC) {
@@ -256,6 +258,9 @@ BOOL_T ddtrace_should_trace_call(zend_execute_data *execute_data, zend_function 
         DDTRACE_G(function_lookup) == NULL) {
         return FALSE;
     }
+#if PHP_VERSION_ID < 50400
+    return FALSE;
+#else
     *fbc = _get_current_fbc(execute_data TSRMLS_CC);
 
     if (!*fbc) {
@@ -291,6 +296,7 @@ BOOL_T ddtrace_should_trace_call(zend_execute_data *execute_data, zend_function 
 #endif
 
     return TRUE;
+#endif
 }
 
 int ddtrace_forward_call(zend_execute_data *execute_data, zend_function *fbc, zval *return_value TSRMLS_DC) {
