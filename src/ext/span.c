@@ -21,8 +21,12 @@ static void _free_span(ddtrace_span_t *span) {
     ddtrace_zval_ptr_dtor(span->span_data);
     efree(span->span_data);
     if (span->exception) {
+#if PHP_VERSION_ID < 70000
         ddtrace_zval_ptr_dtor(span->exception);
-        efree(span->exception);
+        // todo: free exception?
+#else
+        OBJ_RELEASE(span->exception);
+#endif
     }
     efree(span);
 }
