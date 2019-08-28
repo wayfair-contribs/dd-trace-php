@@ -117,7 +117,9 @@
                     <file name="dd_trace_forward_call_from_include.phpt" role="test" />
                     <file name="dd_trace_forward_call_with_inheritance.phpt" role="test" />
                     <file name="dd_trace_forward_call_with_private_callback.phpt" role="test" />
-                    <file name="dd_trace_function.phpt" role="test" />
+                    <file name="dd_trace_function_internal.phpt" role="test" />
+                    <file name="dd_trace_function_mixed.phpt" role="test" />
+                    <file name="dd_trace_function_user.phpt" role="test" />
                     <file name="dd_trace_method.phpt" role="test" />
                     <file name="dd_trace_method_works_with_dd_trace.phpt" role="test" />
                     <file name="dd_trace_push_span_id.phpt" role="test" />
