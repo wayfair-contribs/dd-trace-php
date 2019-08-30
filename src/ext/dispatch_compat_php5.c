@@ -5,6 +5,7 @@
 #include <Zend/zend_exceptions.h>
 
 #include <ext/spl/spl_exceptions.h>
+#include <Zend/zend_compile.h>
 
 #include "ddtrace.h"
 #include "debug.h"
@@ -279,6 +280,11 @@ BOOL_T ddtrace_should_trace_call(zend_execute_data *execute_data, zend_function 
     zval *this = ddtrace_this(execute_data);
     *dispatch = ddtrace_find_dispatch(this, *fbc, fname TSRMLS_CC);
     if (!*dispatch || (*dispatch)->busy) {
+        return FALSE;
+    }
+
+    /* Delegate to the zend_execute_internal hook instead */
+    if ((*fbc)->type == ZEND_INTERNAL_FUNCTION && (*dispatch)->run_as_postprocess) {
         return FALSE;
     }
 

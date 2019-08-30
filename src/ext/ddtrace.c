@@ -26,6 +26,7 @@
 #include "debug.h"
 #include "dispatch.h"
 #include "dispatch_compat.h"
+#include "execute_hooks.h"
 #include "memory_limit.h"
 #include "random.h"
 #include "request_hooks.h"
@@ -112,6 +113,8 @@ static PHP_MINIT_FUNCTION(ddtrace) {
     ddtrace_coms_setup_atexit_hook();
     ddtrace_coms_init_and_start_writer();
 
+    ddtrace_execute_hooks_init();
+
     return SUCCESS;
 }
 
@@ -130,6 +133,8 @@ static PHP_MSHUTDOWN_FUNCTION(ddtrace) {
         // if writer is ensured to be shutdown we can free up config resources safely
         ddtrace_config_shutdown();
     }
+
+    ddtrace_execute_hooks_shutdown();
 
     return SUCCESS;
 }
