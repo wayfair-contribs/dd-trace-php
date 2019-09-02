@@ -15,6 +15,7 @@ final class ConfigurationTest extends BaseTestCase
         putenv('DD_TRACE_ANALYTICS_ENABLED');
         putenv('DD_TRACE_DEBUG');
         putenv('DD_TRACE_ENABLED');
+        putenv('DD_TRACE_URL_AS_RESOURCE_NAMES_ENABLED');
     }
 
     public function testTracerEnabledByDefault()
@@ -132,5 +133,16 @@ final class ConfigurationTest extends BaseTestCase
     {
         putenv('DD_TRACE_ANALYTICS_ENABLED=true');
         $this->assertTrue(Configuration::get()->isAnalyticsEnabled());
+    }
+
+    public function testUriAsResourceNameEnabledDefault()
+    {
+        $this->assertTrue(Configuration::get()->isURLAsResourceNameEnabled());
+    }
+
+    public function testUriAsResourceNameCanBeDisabled()
+    {
+        putenv('DD_TRACE_URL_AS_RESOURCE_NAMES_ENABLED=false');
+        $this->assertFalse(Configuration::get()->isURLAsResourceNameEnabled());
     }
 }
