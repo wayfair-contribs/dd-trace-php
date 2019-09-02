@@ -9,6 +9,8 @@ use DDTrace\Obfuscation\WildcardToRegex;
  */
 class Urls
 {
+    const PATH_REPLACEMENT_CHAR = '?';
+
     private static $defaultPatterns = [
         // UUID's
         // [1-5] = UUID version
@@ -72,6 +74,22 @@ class Urls
     }
 
     /**
+     * Normalizes a path definition where named params are identified by braces.
+     * E.g.: '/users/{userId}/permissions' => '/users/?/permissions'
+     *
+     * @param $path
+     * @return string|null
+     */
+    public static function normalizePathBracesParameters($path)
+    {
+        if (null === $path) {
+            return null;
+        }
+
+        return preg_replace('/\{[^{}]+\}/', self::PATH_REPLACEMENT_CHAR, $path);
+    }
+
+    /**
      * Reduces cardinality of a url.
      *
      * @param string $url
@@ -89,6 +107,6 @@ class Urls
             }
         }
         // Fall back to default replacement rules
-        return preg_replace(self::$defaultPatterns, '$1?$3', $url);
+        return preg_replace(self::$defaultPatterns, '$1' . self::PATH_REPLACEMENT_CHAR . '$3', $url);
     }
 }

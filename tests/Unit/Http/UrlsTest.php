@@ -87,4 +87,32 @@ final class UrlsTest extends Framework\TestCase
             ['/secret/one/two/three/test', '/?/one/two/three/test'],
         ];
     }
+
+    /**
+     * @dataProvider normalizePathBracesParametersProvider
+     * @param string $path
+     * @param string $normalizedPath
+     */
+    public function testNormalizePathBracesParameters($path, $normalizedPath)
+    {
+        $this->assertSame($normalizedPath, Urls::normalizePathBracesParameters($path));
+    }
+
+    public function normalizePathBracesParametersProvider()
+    {
+        return [
+            [null, null],
+            ['', ''],
+            ['/', '/'],
+            ['foo', 'foo'],
+            ['/foo/', '/foo/'],
+            ['foo/bar', 'foo/bar'],
+            ['/foo/bar', '/foo/bar'],
+            ['/foo/{param}', '/foo/?'],
+            ['/foo/{param}/', '/foo/?/'],
+            ['/foo/{param}/bar', '/foo/?/bar'],
+            ['/foo/{param1}/bar/{param2}', '/foo/?/bar/?'],
+            ['/foo/?/bar', '/foo/?/bar'],
+        ];
+    }
 }
