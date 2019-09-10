@@ -132,6 +132,7 @@
                         <file name="exceptions_in_original_call_rethrown_in_tracing_closure_php5.phpt" role="test" />
                         <file name="exceptions_in_tracing_closure_and_original_call.phpt" role="test" />
                         <file name="static_tracing_closures_will_not_bind_this.phpt" role="test" />
+                        <file name="string_conversion.phpt" role="test" />
                     </dir>
                     <file name="destructor_called_when_this_gets_out_of_scope.phpt" role="test" />
                     <file name="enable_throw_exception_if_overridable_doesnt_exist.phpt" role="test" />
