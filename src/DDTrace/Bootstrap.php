@@ -84,15 +84,16 @@ final class Bootstrap
     private static function initRootSpan()
     {
         $tracer = GlobalTracer::get();
+        $isCli = in_array(PHP_SAPI, dd_known_cli_sapis());
         $options = ['start_time' => Time::now()];
-        $startSpanOptions = 'cli' === PHP_SAPI
+        $startSpanOptions = $isCli
             ? StartSpanOptions::create($options)
             : StartSpanOptionsFactory::createForWebRequest(
                 $tracer,
                 $options,
                 Request::getHeaders()
             );
-        $operationName = 'cli' === PHP_SAPI ? basename($_SERVER['argv'][0]) : 'web.request';
+        $operationName = $isCli ? basename($_SERVER['argv'][0]) : 'web.request';
         $span = $tracer->startRootSpan($operationName, $startSpanOptions)->getSpan();
         $span->setIntegration(WebIntegration::getInstance());
         $span->setTraceAnalyticsCandidate();
@@ -102,9 +103,9 @@ final class Bootstrap
         );
         $span->setTag(
             Tag::SPAN_TYPE,
-            'cli' === PHP_SAPI ? Type::CLI : Type::WEB_SERVLET
+            $isCli ? Type::CLI : Type::WEB_SERVLET
         );
-        if ('cli' !== PHP_SAPI) {
+        if (!$isCli) {
             $span->setTag(Tag::HTTP_METHOD, $_SERVER['REQUEST_METHOD']);
             $span->setTag(Tag::HTTP_URL, $_SERVER['REQUEST_URI']);
             // Status code defaults to 200, will be later on changed when http_response_code will be called

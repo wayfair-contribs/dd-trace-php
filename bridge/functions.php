@@ -3,13 +3,25 @@
 namespace DDTrace\Bridge;
 
 /**
+ * Returns a list of known CLI PHP_SAPIs.
+ * @return array
+ */
+function dd_known_cli_sapis()
+{
+    return [
+        'cli',
+        'phpdbg',
+    ];
+}
+
+/**
  * Tells whether or not tracing is enabled without having to fire the auto-loading mechanism.
  *
  * @return bool
  */
 function dd_tracing_enabled()
 {
-    if ('cli' === PHP_SAPI) {
+    if (in_array(PHP_SAPI, dd_known_cli_sapis())) {
         $cliEnabled = getenv('DD_TRACE_CLI_ENABLED');
         if (false === $cliEnabled) {
             return false;
