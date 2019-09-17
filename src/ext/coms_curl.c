@@ -2,6 +2,7 @@
 
 #include <curl/curl.h>
 #include <pthread.h>
+#include <php.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -130,6 +131,8 @@ inline static void curl_send_stack(struct _writer_loop_data_t *writer, ddtrace_c
         struct curl_slist *headers = NULL;
         headers = curl_slist_append(headers, "Transfer-Encoding: chunked");
         headers = curl_slist_append(headers, "Content-Type: application/msgpack");
+        headers = curl_slist_append(headers, "Datadog-Meta-Lang: php");
+        headers = curl_slist_append(headers, "Datadog-Meta-Lang-Version: " PHP_VERSION);
         curl_easy_setopt(writer->curl, CURLOPT_HTTPHEADER, headers);
 
         curl_easy_setopt(writer->curl, CURLOPT_READFUNCTION, ddtrace_coms_read_callback);
