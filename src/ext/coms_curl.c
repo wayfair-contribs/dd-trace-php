@@ -146,11 +146,16 @@ inline static void curl_send_stack(struct _writer_loop_data_t *writer, ddtrace_c
             zend_fetch_class_by_name(class_name, class_name_len, NULL, ZEND_FETCH_CLASS_SILENT TSRMLS_CC);
         while (ce) {
             // todo: sandbox so exceptions/errors are not emitted
-            zval *obj, *container_id;
-            zend_objects_new(&obj, ce TSRMLS_CC);
-            zend_call_method_with_0_params(obj, ce, NULL, "getContainerId", &container_id);
+            zend_object *object;
+            zval obj, *container_id;
 
-            if (!zend_is_true(containerId)) break;
+            Z_OBJVAL(obj) = zend_objects_new(&object, ce TSRMLS_CC);
+            object_properties_init(object, ce);
+
+            zval *obj_p = &obj;
+            zend_call_method_with_0_params(&obj_p, ce, NULL, "getContainerId", &container_id);
+
+            if (!zend_is_true(container_id)) break;
 
             size_t prefix_len = sizeof("Datadog-Container-Id: ") - 1;
             char *str = emalloc(prefix_len + Z_STRLEN_P(container_id) + 1);
@@ -158,17 +163,21 @@ inline static void curl_send_stack(struct _writer_loop_data_t *writer, ddtrace_c
             memcpy(str, Z_STRVAL_P(container_id), Z_STRLEN_P(container_id));
             headers = curl_slist_append(headers, str);
 
-            efree(str) zval_ptr_dtor(&container_id);
-            zval_ptr_dtor(&obj);
+            efree(str);
+            zval_ptr_dtor(&container_id);
+            zval_dtor(&obj);
             break;
         }
 #else
         zend_string *class = zend_string_init(class_name, class_name_len, 0);
         zend_class_entry *ce = zend_fetch_class_by_name(class, NULL, ZEND_FETCH_CLASS_SILENT);
         while (ce) {
-            zval zobj, container_id;
             zend_object *obj = zend_objects_new(ce);
+            object_properties_init(obj, ce);
+
+            zval zobj, container_id;
             ZVAL_OBJ(&zobj, obj);
+
             zend_call_method_with_0_params(&zobj, ce, NULL, "getContainerId", &container_id);
 
             if (!zend_is_true(&container_id)) break;
