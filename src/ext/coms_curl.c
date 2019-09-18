@@ -1,8 +1,9 @@
 #include "coms_curl.h"
 
+#include <Zend/zend_interfaces.h>
 #include <curl/curl.h>
-#include <pthread.h>
 #include <php.h>
+#include <pthread.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -133,6 +134,59 @@ inline static void curl_send_stack(struct _writer_loop_data_t *writer, ddtrace_c
         headers = curl_slist_append(headers, "Content-Type: application/msgpack");
         headers = curl_slist_append(headers, "Datadog-Meta-Lang: php");
         headers = curl_slist_append(headers, "Datadog-Meta-Lang-Version: " PHP_VERSION);
+
+        // $containerInfo = new DDTrace\Util\ContainerInfo\ContainerInfo()
+        // if ($containerId = $containerInfo->getContainerId())
+        //     $this->setHeader('Datadog-Container-Id', $containerId);
+        const char *class_name = "DDTrace\\Util\\ContainerInfo\\ContainerInfo";
+        size_t class_name_len = sizeof("DDTrace\\Util\\ContainerInfo\\ContainerInfo") - 1;
+#if PHP_VERSION_ID < 70000
+        TSRMLS_FETCH();
+        zend_class_entry *ce =
+            zend_fetch_class_by_name(class_name, class_name_len, NULL, ZEND_FETCH_CLASS_SILENT TSRMLS_CC);
+        while (ce) {
+            // todo: sandbox so exceptions/errors are not emitted
+            zval *obj, *container_id;
+            zend_objects_new(&obj, ce TSRMLS_CC);
+            zend_call_method_with_0_params(obj, ce, NULL, "getContainerId", &container_id);
+
+            if (!zend_is_true(containerId)) break;
+
+            size_t prefix_len = sizeof("Datadog-Container-Id: ") - 1;
+            char *str = emalloc(prefix_len + Z_STRLEN_P(container_id) + 1);
+            memcpy(str, "Datadog-Container-Id: ", prefix_len);
+            memcpy(str, Z_STRVAL_P(container_id), Z_STRLEN_P(container_id));
+            headers = curl_slist_append(headers, str);
+
+            efree(str) zval_ptr_dtor(&container_id);
+            zval_ptr_dtor(&obj);
+            break;
+        }
+#else
+        zend_string *class = zend_string_init(class_name, class_name_len, 0);
+        zend_class_entry *ce = zend_fetch_class_by_name(class, NULL, ZEND_FETCH_CLASS_SILENT);
+        while (ce) {
+            zval zobj, container_id;
+            zend_object *obj = zend_objects_new(ce);
+            ZVAL_OBJ(&zobj, obj);
+            zend_call_method_with_0_params(&zobj, ce, NULL, "getContainerId", &container_id);
+
+            if (!zend_is_true(&container_id)) break;
+
+            size_t prefix_len = sizeof("Datadog-Container-Id: ") - 1;
+            char *str = emalloc(prefix_len + Z_STRLEN(container_id) + 1);
+            memcpy(str, "Datadog-Container-Id: ", prefix_len);
+            memcpy(str, Z_STR(container_id), Z_STRLEN(container_id));
+            headers = curl_slist_append(headers, str);
+
+            efree(str);
+            zval_ptr_dtor(&container_id);
+            OBJ_RELEASE(obj);
+            break;
+        }
+        zend_string_release(class);
+#endif
+
         curl_easy_setopt(writer->curl, CURLOPT_HTTPHEADER, headers);
 
         curl_easy_setopt(writer->curl, CURLOPT_READFUNCTION, ddtrace_coms_read_callback);
