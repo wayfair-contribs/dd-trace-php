@@ -1,0 +1,50 @@
+server {
+    root /var/www/html;
+
+    index index.html index.htm index.php;
+    server_name _;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    location ~ \.php$ {
+        include /etc/nginx/fastcgi_params;
+        include snippets/fastcgi-php.conf;
+    }
+}
+
+server {
+    listen 8056 default_server;
+    location ~ \.php$ {
+        fastcgi_pass unix:/run/php/php5.6-fpm.sock;
+    }
+}
+
+server {
+    listen 8070 default_server;
+    location ~ \.php$ {
+        fastcgi_pass unix:/run/php/php7.0-fpm.sock;
+    }
+}
+
+server {
+    listen 8071 default_server;
+    location ~ \.php$ {
+        fastcgi_pass unix:/run/php/php7.1-fpm.sock;
+    }
+}
+
+server {
+    listen 8072 default_server;
+    location ~ \.php$ {
+        fastcgi_pass unix:/run/php/php7.2-fpm.sock;
+    }
+}
+
+server {
+    listen 8073 default_server;
+    location ~ \.php$ {
+        fastcgi_pass unix:/run/php/php7.3-fpm.sock;
+    }
+}
