@@ -19,7 +19,7 @@ void ddtrace_seed_prng(TSRMLS_D) {
 }
 
 void ddtrace_init_span_id_stack(TSRMLS_D) {
-    DDTRACE_G(root_span_id) = 0;
+    DDTRACE_G(root_span_id) = NULL;
     DDTRACE_G(span_ids_top) = NULL;
 }
 
@@ -38,8 +38,8 @@ uint64_t ddtrace_push_span_id(TSRMLS_D) {
     stack->next = DDTRACE_G(span_ids_top);
     DDTRACE_G(span_ids_top) = stack;
     // Assuming the first call this function is for the root span
-    if (DDTRACE_G(root_span_id) == 0) {
-        DDTRACE_G(root_span_id) = stack->id;
+    if (DDTRACE_G(root_span_id) == NULL) {
+        DDTRACE_G(root_span_id) = stack;
     }
     DDTRACE_G(open_spans_count)++;
     return stack->id;
@@ -54,7 +54,7 @@ uint64_t ddtrace_pop_span_id(TSRMLS_D) {
     DDTRACE_G(span_ids_top) = stack->next;
     id = stack->id;
     if (DDTRACE_G(span_ids_top) == NULL) {
-        DDTRACE_G(root_span_id) = 0;
+        DDTRACE_G(root_span_id) = NULL;
     }
     efree(stack);
     DDTRACE_G(closed_spans_count)++;
@@ -62,11 +62,8 @@ uint64_t ddtrace_pop_span_id(TSRMLS_D) {
     return id;
 }
 
-uint64_t ddtrace_peek_span_id(TSRMLS_D) {
-    if (DDTRACE_G(span_ids_top) == NULL) {
-        return 0;
-    }
-    return DDTRACE_G(span_ids_top)->id;
+ddtrace_span_ids_t *ddtrace_active_span_id(TSRMLS_D) {
+    return DDTRACE_G(span_ids_top);
 }
 
-uint64_t ddtrace_root_span_id(TSRMLS_D) { return DDTRACE_G(root_span_id); }
+ddtrace_span_ids_t *ddtrace_root_span_id(TSRMLS_D) { return DDTRACE_G(root_span_id); }

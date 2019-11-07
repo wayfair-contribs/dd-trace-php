@@ -646,41 +646,40 @@ static PHP_FUNCTION(dd_trace_internal_fn) {
 #endif
 }
 
+static inline void return_span_id(zval *return_value, uint64_t id) {
+    char buf[DD_TRACE_MAX_ID_LEN + 1];
+    snprintf(buf, sizeof(buf), "%" PRIu64, id); 
 #if PHP_VERSION_ID >= 70000
-#define RETURN_SPAN_ID(id_fn)                                      \
-    do {                                                           \
-        char buf[DD_TRACE_MAX_ID_LEN + 1];                         \
-        snprintf(buf, sizeof(buf), "%" PRIu64, (id_fn)(TSRMLS_C)); \
-        RETURN_STRING(buf);                                        \
-    } while (0);
+    RETURN_STRING(buf);
 #else
-#define RETURN_SPAN_ID(id_fn)                                      \
-    do {                                                           \
-        char buf[DD_TRACE_MAX_ID_LEN + 1];                         \
-        snprintf(buf, sizeof(buf), "%" PRIu64, (id_fn)(TSRMLS_C)); \
-        RETURN_STRING(buf, 1);                                     \
-    } while (0);
+    RETURN_STRING(buf, 1);
 #endif
+}
 
 /* {{{ proto string dd_trace_push_span_id() */
 static PHP_FUNCTION(dd_trace_push_span_id) {
     PHP5_UNUSED(return_value_used, this_ptr, return_value_ptr, ht TSRMLS_CC);
     PHP7_UNUSED(execute_data);
-    RETURN_SPAN_ID(ddtrace_push_span_id);
+    return_span_id(return_value, ddtrace_push_span_id(TSRMLS_C));
 }
 
 /* {{{ proto string dd_trace_pop_span_id() */
 static PHP_FUNCTION(dd_trace_pop_span_id) {
     PHP5_UNUSED(return_value_used, this_ptr, return_value_ptr, ht TSRMLS_CC);
     PHP7_UNUSED(execute_data);
-    RETURN_SPAN_ID(ddtrace_pop_span_id);
+    return_span_id(return_value, ddtrace_pop_span_id(TSRMLS_C));
 }
 
 /* {{{ proto string dd_trace_peek_span_id() */
 static PHP_FUNCTION(dd_trace_peek_span_id) {
     PHP5_UNUSED(return_value_used, this_ptr, return_value_ptr, ht TSRMLS_CC);
     PHP7_UNUSED(execute_data);
-    RETURN_SPAN_ID(ddtrace_peek_span_id);
+    ddtrace_span_ids_t *active_id = ddtrace_active_span_id(TSRMLS_C);
+    if (active_id) {
+        return_span_id(return_value, active_id->id);
+    } else {
+        return_span_id(return_value, 0U);
+    }
 }
 
 /* {{{ proto string dd_trace_closed_spans_count() */

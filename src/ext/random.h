@@ -21,7 +21,7 @@ void ddtrace_init_span_id_stack(TSRMLS_D);
 void ddtrace_free_span_id_stack(TSRMLS_D);
 uint64_t ddtrace_push_span_id(TSRMLS_D);
 uint64_t ddtrace_pop_span_id(TSRMLS_D);
-uint64_t ddtrace_peek_span_id(TSRMLS_D);
-uint64_t ddtrace_root_span_id(TSRMLS_D);
+ddtrace_span_ids_t *ddtrace_active_span_id(TSRMLS_D);
+ddtrace_span_ids_t *ddtrace_root_span_id(TSRMLS_D);
 
 #endif  // DD_RANDOM_H
