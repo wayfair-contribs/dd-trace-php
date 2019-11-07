@@ -30,7 +30,7 @@ class PrivateCallbackRequest
     }
 }
 
-final class CurlIntegrationTest extends IntegrationTestCase
+class CurlIntegrationTest extends IntegrationTestCase
 {
     const IS_SANDBOX = false;
 
@@ -389,7 +389,6 @@ final class CurlIntegrationTest extends IntegrationTestCase
     public function testAppendHostnameToServiceName()
     {
         putenv('DD_TRACE_HTTP_CLIENT_SPLIT_BY_DOMAIN=true');
-
         $traces = $this->isolateTracer(function () {
             $ch = curl_init(self::URL . '/status/200');
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -397,6 +396,7 @@ final class CurlIntegrationTest extends IntegrationTestCase
             $this->assertSame('', $response);
             curl_close($ch);
         });
+        putenv('DD_TRACE_HTTP_CLIENT_SPLIT_BY_DOMAIN');
 
         $this->assertSpans($traces, [
             SpanAssertion::build(
